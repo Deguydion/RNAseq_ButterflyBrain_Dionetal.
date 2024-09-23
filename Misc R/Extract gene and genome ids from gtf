@@ -1,4 +1,4 @@
-### #Creates a file that contains the gene id "MSTRG" and the corresponding genome Id "Bany"
+#Creates a file that contains the gene id "MSTRG" and the corresponding genome Id "Bany"
 #Input is the transcriptome gtf file
 #Output is a double column txt file
 #Process: isolate lines with both terms, remove extra text, remove genome name extensions, remove the duplicate line
@@ -6,7 +6,7 @@
 setwd("C:/Users/molen/Desktop/transcriptomics_analysis/Assemblies/Bany_MSTRGcorrespondence")
 list.files("C:/Users/molen/Desktop/transcriptomics_analysis/Assemblies/Bany_MSTRGcorrespondence")
 
-** #1. Remove first column of the input file (all lines have "Bany" on the first column)**
+#1. Remove first column of the input file (all lines have "Bany" on the first column)
 # Define the input and output file paths
 input_file <- "stringtie_brain_assembly.gtf"
 output_file <- "nofirstcolumn.txt"
@@ -31,7 +31,7 @@ while (length(line <- readLines(infile, n = 1, warn = FALSE)) > 0) {
 close(infile)
 close(outfile)
 
-**#2.Keep lines with both Bany and MSTRG**
+#2.Keep lines with both Bany and MSTRG
 # Define the input and output file paths
 input_file <- "nofirstcolumn.txt"
 output_file <- "MSTRG_Bany.txt"
@@ -48,7 +48,7 @@ writeLines(filtered_lines, output_file)
 
 cat("Filtered lines saved to", output_file, "\n")
 
-**#3.Extract the "Bany" and "MSTRG" info **
+#3.Extract the "Bany" and "MSTRG" info
 # Define the input and output file paths
 input_file <- "MSTRG_Bany.txt"
 output_file <- "MSTRG_Bany_extracted_info.txt"
@@ -78,7 +78,7 @@ close(outfile)
 
 cat("Extracted MSTRG and Bany information saved to", output_file, "\n")
 
-**#4. Extract only "Bany" and "mstrg"**
+#4. Extract only "Bany" and "mstrg"
 # Define the input and output file paths
 input_file <- "MSTRG_Bany_extracted_info.txt"  
 output_file <- "MSTRG_Bany_only.txt"
@@ -109,7 +109,7 @@ close(outfile)
 
 cat("Extracted MSTRG and Bany information saved to", output_file, "\n")
 
-**#5.Remove the Bany name extensions (-RA to -RM)**
+#5.Remove the Bany name extensions (-RA to -RM)
 # Define the input and output file paths
 input_file <- "MSTRG_Bany_only.txt" 
 output_file <- "no-Rs.txt"
