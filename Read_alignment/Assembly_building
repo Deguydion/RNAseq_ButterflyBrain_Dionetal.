@@ -1,0 +1,16 @@
+#Merge all library gtf files. 
+#Input a created list of all files in mergelist.txt
+stringtie --merge mergelist.txt -p 24 -o brain_assembly.gtf 
+
+#Convert the merged gtf files to a fasta file with the gffread utility
+gffread -w brain_assembly.fa -g B_anynana_v2.fa brain_assembly.gtf
+
+#Get assembly file with longest isoform and shorter name (for annotation purposes)
+agat_sp_keep_longest_isoform.pl --gff brain_assembly.gtf --output brain_assembly_longestiso.gtf
+gffread -w brain_assembly_longestiso.fa -g B_anynana_v2.fa brain_assembly_longestiso.gtf
+awk -F. 'BEGIN {OFS="."} /^>MSTRG/ {print $1,$2} ! /^>MSTRG/ {print}' brain_assembly_longestiso.fa > brain_assembly_short_MSTRG.fa
+awk '/^>/ {sub(/-.*/, "");} 1' brain_assembly_short_MSTRG.fa > brain_assembly_short.fa 
+
+#Get basics data on the assembly. We use the assembly-stat function (https://github.com/sanger-pathogens/assembly-stats)
+assembly-stats brain_assembly.fa 
+cat stringtie_brain_assembly.gtf | grep -v "^#" | awk '$3=="transcript" {print}' | wc -l
