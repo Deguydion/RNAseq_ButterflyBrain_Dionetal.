@@ -1,0 +1,4 @@
+python /path/to/rmats.py --b1 brain_samples.txt --gtf assembly.gtf -t paired --readLength 150 --variable-read-length --nthread 48 --novelSS --od ./heatmap_output --tmp ./heatmap_temp_output --statoff
+python /path/to/rmats.py --b1 all_samples.txt --gtf stringtie_assembly.gtf -t paired --libType fr-firststrand --readLength 150 --variable-read-length --nthread 48 --novelSS --od ./prep_post_output --tmp ./prep_post_tmp --task both
+python /path/to/prepare_stat_inputs.py --new-output-dir out_MvsN --old-output-dir prep_post_output --group-1-indices 0,1,2,3,4 --group-2-indices 5,6,7,8,9
+python path/to/rmats.py --od out_MvsN --tmp tmp_MvsN --task stat
