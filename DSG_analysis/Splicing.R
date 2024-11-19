@@ -1,5 +1,4 @@
 #DSG ANALYSES FOLLOWING RMATS OUTPUTS in R 
-#Example shown is MvsN, same used for other comparisons
 #Code adapted from Shen Tian (Tian S, Monteiro A (2022) A Transcriptomic Atlas Underlying Developmental Plasticity of Seasonal Forms of Bicyclus anynana Butterflies. Mol Biol Evol 39.)
 
 library(reshape)
@@ -26,7 +25,7 @@ library(GenomicFeatures)
 library(ggfortify)
 library(rgl)
 
-# Before importing the rMTAS outpot files (JC.txt), make sure the first row (header) has been removed, the files are renamed as fixed.txt
+# Before importing the rMTAS outpout files (JC.txt), remove the first row (header) and rename as fixed.txt
 # Here we detect each type of alternative splicing events/genes across all clean samples 
 
 # Importing the fixed.JC.txt 
@@ -166,6 +165,8 @@ ggsave(temp_hm,width=6,height=6,filename='all_clean.eps')
 
 
 #2. BUILD THE DIFFERENTIALLY SPLICED GENE TABLES 
+#Example shown is MvsN, same used for other comparisons
+
 #We detect each type of differentially spliced genes between 2 treatments
 #A3SS: alternative 3' splice sites
 A3SS=read.table("A3SS.MATS.JC.txt",header=TRUE)
