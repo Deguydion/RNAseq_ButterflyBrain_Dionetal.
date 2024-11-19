@@ -1,0 +1,65 @@
+#DEG ANALYSIS WITH R WITHIN RSTUDIO USING DESEQ2 PACKAGE
+
+#DATA INPUT AND FILTERING
+#Data import
+setwd("C:/Users/folders/DEG")
+brain_countData <-as.matrix(read.csv("brain_gene_count_matrix.csv",row.names="gene_id"))
+brain_colData<-read.csv("brain_pheno_data.csv",row.names=1)
+
+#Check that all sample IDs in colData are also in CountData and match their orders
+all(rownames(brain_colData) %in% colnames(brain_countData))
+brain_countData <- brain_countData[, rownames(brain_colData)]
+all(rownames(brain_colData) == colnames(brain_countData))
+
+#Create a DESeqDataSet from count matrix and labels
+brain_dds<-DESeqDataSetFromMatrix(countData=brain_countData,colData=brain_colData,design=~treatment)
+
+#Pre-filtering of low count genes. Rows with less than 10 reads in total are removed
+brain_keep<-rowSums(counts(brain_dds)) >= 10
+brain_dds<-brain_dds[brain_keep,]
+
+#Data transformation
+brain_rld<-rlog(brain_dds,blind=TRUE)
+head(assay(brain_rld),3)
+
+#Principal component analysis PCA 
+plotPCA(brain_rld, intgroup="treatment")
+plotPCA(brain_rld, intgroup="treatment") + geom_text(aes(label=name))
+
+#Heatmap of the count matrix
+brain_rld_mat <- assay(brain_rld) #extract rlog matrix from the object
+brain_rld_cor <- cor(brain_rld_mat) # Compute pairwise correlation values
+head(brain_rld_cor)
+pheatmap(brain_rld_cor, annotation = brain_colData)
+
+#DESEQ ANALYSIS
+brain_dds <- DESeq(brain_dds)
+resultsNames(brain_dds) # to see what names to use in the comparisons
+
+#Perform contrast analysis between treatments
+brain_res_mvsnaive <- results(brain_dds, contrast=c("treatment","naive_fem","male"),alpha=0.05)#Males=base, results are changes in females
+brain_res_naivevswt <- results(brain_dds, contrast=c("treatment","wt_exp_fem","naive_fem"),alpha=0.05) #changes in wt females
+brain_res_wtvsnb1 <- results(brain_dds, contrast=c("treatment","nb1_exp_fem","wt_exp_fem"),alpha=0.05) #changes in NB1
+brain_res_wtvsnb2 <- results(brain_dds, contrast=c("treatment","nb2_exp_fem","wt_exp_fem"),alpha=0.05) #changes in NB2
+brain_res_nb1vsnb2 <- results(brain_dds, contrast=c("treatment","nb1_exp_fem","nb2_exp_fem"),alpha=0.05) #changes in NB1
+
+#Re-ordering the result datasets by the smallest p-values
+brain_res_mvsnaive <- brain_res_mvsnaive[order(brain_res_mvsnaive$pvalue),]
+brain_res_naivevswt <- brain_res_naivevswt[order(brain_res_naivevswt$pvalue),]
+brain_res_wtvsnb1 <- brain_res_wtvsnb1[order(brain_res_wtvsnb1$pvalue),]
+brain_res_wtvsnb2 <- brain_res_wtvsnb2[order(brain_res_wtvsnb2$pvalue),]
+brain_res_nb1vsnb2 <- brain_res_nb1vsnb2[order(brain_res_nb1vsnb2$pvalue),]
+
+#Print a summary of the contrast analyses
+summary(brain_res_mvsnaive) 
+summary(brain_res_naivevswt) 
+summary(brain_res_wtvsnb1) 
+summary(brain_res_wtvsnb2) 
+summary(brain_res_nb1vsnb2) 
+
+#Exporting the results to csv files
+write.csv(as.data.frame(brain_res_mvsnaive),file="brain_mvsnaive_DEG.csv")
+write.csv(as.data.frame(brain_res_naivevswt),file="brain_naivevswt_DEG.csv")
+write.csv(as.data.frame(brain_res_wtvsnb2),file="brain_wtvsnb2_DEG.csv")
+write.csv(as.data.frame(brain_res_wtvsnb1),file="brain_wtvsnb1_DEG.csv")
+write.csv(as.data.frame(brain_res_nb1vsnb2),file="brain_nb1vsnb2_DEG.csv")
