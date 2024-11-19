@@ -11,4 +11,4 @@ Inputs: list of samples (here called brain_samples.txt), as a list with file nam
 3: perform the comparisons between the different groups. 
 A folder is created for each comparison and we code the treatments by calling them groups 1 and 2, and each reps within treatments are called by a number corresponding to the order they appear in the all_samples.txt file
 4: perform statistics on each comparisons
-The remaining filtering and procesing steps are run in R (see DSG.R). 
+The remaining filtering and procesing steps are run in R (see splicing.R). 
