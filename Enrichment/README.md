@@ -12,7 +12,7 @@ List of files necessary for the analysis:
 \
 #GO2name.csv : a list of all GO ids + description of function
 \
-#KEGG2name.csv : list of kegg ids+ddescription
+#KEGG2name.csv : list of kegg id s+ description
 \
 #go2gene.txt : list of all GO ids + genes from the assembly
 \
