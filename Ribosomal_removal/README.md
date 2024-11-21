@@ -8,5 +8,5 @@ From https://github.com/sortmerna/sortmerna
 
  Download the rRNA databases. 
  \
-bash sortme.sh
+Run sortme.sh
 
