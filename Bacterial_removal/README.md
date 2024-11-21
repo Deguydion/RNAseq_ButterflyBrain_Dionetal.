@@ -11,7 +11,7 @@ The file is called bacterialgenome.fa
 
 Install BBmap and bbsplit.
 \
-Run trim.sh
+Run bbsplit.sh
 \
 The script is a loop that takes all the samples from the folder. 
 Script can also be done for samples one by one.
