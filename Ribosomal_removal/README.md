@@ -4,9 +4,9 @@ These scripts are used to remove ribosomal RNA from RNAseq data.
 From https://github.com/sortmerna/sortmerna
 
 
-## Usage
+## Process
 
  Download the rRNA databases. 
- Edit the script with paths to files and folders
- Run the script by typing: bash sortme.sh
+ \
+bash sortme.sh
 
