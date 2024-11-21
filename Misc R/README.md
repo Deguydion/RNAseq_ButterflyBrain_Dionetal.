@@ -7,14 +7,14 @@ It imputs the transcriptome assembly file in gtf and outputs a two columns txt f
 Output table can be opened in excel and used with VLOOKUP to add names to gene lists.
 
 ### Subsetting gene sequences from the assembly 
-Uses the package seqinr.
+Uses the package seqinr (https://cran.r-project.org/web/packages/seqinr/index.html).
 This extracts sequences of genes of interest from the assembly and write them to a new file.
 Inputs the assembly containing all genes of the transcriptome, or can input genome, inputs a list of gene names of interest, and output the sequences of the gene of interest extracted from the assembly.
 Gene names in assembly and in the list of gene of interest must correspond. 
-Useful for annotation of a subset of gene, like DEG and DSG.
+Useful for annotation of a subset of genes, like DEG and DSG.
 
 ### DEG&DSG number plot
-Uses packaes ggplot2 to build the plot, and wesanderson to use the movies' color palettes.
+Uses packaes ggplot2 (https://ggplot2.tidyverse.org/) to build the plot, and wesanderson (https://github.com/karthik/wesanderson) to use the movies' color palettes.
 This plots numbers of DEG and DSG next to each other as bar a plot. 
 
 ### Splicing proportions plot
