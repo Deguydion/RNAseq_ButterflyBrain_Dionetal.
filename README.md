@@ -1,7 +1,7 @@
-## RNAseq analysis of exposed butterfly brains. 
+# RNAseq analysis of exposed butterfly brains. 
 From Dion et al. Butterfly brains change in morphology and in gene splicing patterns after brief pheromone exposure. 
 
-# Process
+## Process
 1. Adaptor trimming
 2. Bacterial removal
 3. Ribosomal removal
