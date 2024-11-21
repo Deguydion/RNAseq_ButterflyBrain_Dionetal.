@@ -20,9 +20,6 @@ kegg2gene.txt : list of all kegg ids + genes from the assembly
 mylist.csv : table of gene names of interest
 \
 1. Create go2gene file with tidyR and dplyr. go2gene contains all the go terms of all the genes in the assembly.
-\
 2. Import GO2name and mylist.
-\
 3. Do GO enrichment analysis.
-\
 4. Build plots.
