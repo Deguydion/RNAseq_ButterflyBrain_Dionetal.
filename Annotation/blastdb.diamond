@@ -1,0 +1,5 @@
+update_blastdb.pl --decompress nr [*] 
+get_species_taxids.sh -t 50557 >insect.id 
+blastdbcmd -db nr -taxidlist insect.id -outfmt %f | grep "^>" | head -3
+diamond makedb --in insect.fsa -d insectdb
+diamond blastx -d insectdb.dmnd -q sequences.fa -f 5 -o sequences_annot.xml
