@@ -5,9 +5,9 @@ Use GenetoGenome_id.R.
 \
 The transcript and gene number tables contain the gene names as MSTRG only.
 \
-This scripts allows the recovery of the corresponding Bany names from the genome, which simplifies annotation and allows alignment in IGV (for sashimi plot building for example).
+This scripts allows the recovery of the corresponding Bany names from the genome, which simplifies annotation and allows selection of the gene in IGV for alignment of transcript to the genome (for sashimi plot building for example).
 \
-It imputs the transcriptome assembly file in gtf and outputs a two columns txt file with the MSTRG and Bany corresponding names.
+It imputs the transcriptome assembly file in gtf (which contains both he MSTRG and the correspoding genome Bany name identified during alignment to the genome) and outputs a two columns txt file with the MSTRG and Bany corresponding names.
 \
 Output table can be opened in excel and used with VLOOKUP to add names to gene lists.
 
@@ -18,7 +18,7 @@ Uses the package seqinr (https://cran.r-project.org/web/packages/seqinr/index.ht
 \
 This extracts sequences of genes of interest from the assembly and write them to a new file.
 \
-Inputs the assembly containing all genes of the transcriptome, or can input genome, inputs a list of gene names of interest, and output the sequences of the gene of interest extracted from the assembly.
+Inputs the assembly containing all genes of the transcriptome or can input genome, inputs a list of gene names of interest, and outputs the sequences of the gene of interest extracted from the assembly.
 \
 Gene names in assembly and in the list of gene of interest must correspond. 
 \
