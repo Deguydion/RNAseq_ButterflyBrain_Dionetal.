@@ -1,6 +1,7 @@
 ## Purpose: 
 
-Aligns reads to the genome, creates an assembly based on reads and generates abundance tables (gene and transcript counts) to be used in DEG, DSG analysis and annotation. 
+Aligns reads to the genome, creates an assembly based on reads and generates abundance tables (gene and transcript counts) to be used in DEG, DSG analysis and annotation.
+\
 Program used are hisat2 (http://daehwankimlab.github.io/hisat2/) and stringtie (https://ccb.jhu.edu/software/stringtie/)
 
 ## Steps: 
