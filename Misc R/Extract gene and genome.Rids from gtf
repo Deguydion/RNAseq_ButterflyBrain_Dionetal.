@@ -1,3 +1,4 @@
+#Done in R.
 #Creates a file that contains the gene id "MSTRG" and the corresponding genome Id "Bany"
 #Input is the transcriptome gtf file
 #Output is a double column txt file
