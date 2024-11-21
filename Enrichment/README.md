@@ -20,7 +20,6 @@ List of files necessary for the analysis:
 \
 #mylist.csv : table of gene names of interest
 \
-\
 1. Create go2gene file with tidyR and dplyr. go2gene contains all the go terms of all the genes in the assembly.
 \
 2. Import GO2name and mylist.
