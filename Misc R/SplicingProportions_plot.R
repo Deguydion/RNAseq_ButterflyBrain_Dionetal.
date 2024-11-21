@@ -1,4 +1,4 @@
-#BUILD PROPORTIONS OF SPLICING TYPES PLOT
+#BUILD PROPORTIONS OF SPLICING TYPES PLOT IN R
 
 library(ggplot2) #to build the plot
 library(wesanderson) #for the colors
