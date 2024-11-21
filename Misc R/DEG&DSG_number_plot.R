@@ -1,4 +1,4 @@
-#BUILD NB OF DSG AND DEG PLOT 
+#BUILD NB OF DSG AND DEG PLOT IN R
 
 library(ggplot2) #plot building
 library(wesanderson) #plot colours
