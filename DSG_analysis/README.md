@@ -5,11 +5,11 @@ We used rMATS https://github.com/Xinglab/rmats-turbo/blob/v4.1.2/README.md
 
 ## Process:
   
-1. run rmats using "statoff" to calculate the percentage of alternative splicing without any apriori on the groups. Used for building the heatmap
-Inputs: list of samples (here called brain_samples.txt), as a list with file names separated by commas, merged gtf asssembly from all the samples
-2. calculate the percenage of alternative splicing for all genes in all samples and do treatment comparisons
+1. run rmats using "statoff" to calculate the percentage of alternative splicing without any apriori on the groups. Used for building the heatmap.
+Input is a list of samples (here called brain_samples.txt) with file names separated by commas; and merged gtf asssembly from all the samples.
+2. calculate the percenage of alternative splicing for all genes in all samples and do treatment comparisons.
 3: perform the comparisons between the different groups. 
-A folder is created for each comparison and we code the treatments by calling them groups 1 and 2, and each reps within treatments are called by a number corresponding to the order they appear in the all_samples.txt file
-4: perform statistics on each comparisons
+A folder is created for each comparison and we code the treatments by calling them groups 1 and 2, and each reps within treatments are called by a number corresponding to the order they appear in the brain_samples.txt file
+4: perform statistics on each comparisons.
 The remaining filtering and procesing steps are run in R (see Splicing.R). 
-5. To build the sashimi plots in IGV (https://igv.org/), we need to index each library into a.bai file using samtools (http://www.htslib.org/). Run bai_indexing.samtools.sh to index all files.
+5. To build the sashimi plots in IGV (https://igv.org/), we need to index each .bam library into a.bai file using samtools (http://www.htslib.org/). Run bai_indexing.samtools.sh to index all files, and load the.bai into IGV.
