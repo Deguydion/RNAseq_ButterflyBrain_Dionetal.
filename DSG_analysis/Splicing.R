@@ -157,11 +157,79 @@ col_data <- data.frame(row.names = substring(colnames(A3SS_PSI10[68:92]),10),Tre
 col_data
 
 
-# Plot heatmap
+# Plot heatmap all data together
 ann_colors = list(Sex = c(Males="#003300", Females="#660000"),Treatment=c(Males="lightgrey",Naives="black",NB1="#009988",NB2="#0177BB",Wt="#EE7733"))
 temp_hm=pheatmap(all_PSI10_no_na,border=NA,scale = "row",annotation_colors = ann_colors,color = colorRampPalette(c("purple","purple", "black", "yellow", "yellow"))(100), annotation=col_data, show_rownames=FALSE,show_colnames = TRUE,annotation_names_col=FALSE,annotation_legend = TRUE)
 ggsave(temp_hm,width=6,height=6,filename='all_clean.tiff')
 ggsave(temp_hm,width=6,height=6,filename='all_clean.eps')
+
+#Plot heatmaps based on biological comparisons (from Reviewer, July 2025)
+
+treatment_colors <- c(male = "lightgrey",naive_fem = "black", wt_exp_fem = "#EE7733", nb1_exp_fem = "#009988", nb2_exp_fem = "#0177BB")
+heat_colors <- colorRampPalette(c("purple", "purple", "black", "yellow", "yellow"))(100)
+
+#males vs naive females
+samples1 <- rownames(col_data)[col_data$treatment %in% c("male", "naive_fem")]
+psi1 <- all_PSI10_no_na[, samples1]
+psi1_scaled <- t(scale(t(psi1)))
+psi1_scaled <- psi1_scaled[apply(psi1_scaled, 1, function(x) all(is.finite(x))), ]
+sum(!apply(psi_scaled, 1, function(x) all(is.finite(x))))
+annot1 <- col_data[samples1, , drop = FALSE]
+annot1$treatment <- factor(annot1$treatment, levels = c("male", "naive_fem"))
+annot1$treatment <- droplevels(annot1$treatment)
+colors1 <- treatment_colors[levels(annot1$treatment)]
+
+pheatmap(
+  psi1_scaled,
+  color = heat_colors,
+  annotation_col = annot1["treatment"],
+  annotation_colors = list(treatment = colors1),
+  main = "Heatmap: Male vs Naive Females",
+  show_rownames = FALSE,
+  filename = "splice_Naives_heatmap2.png"
+  )
+
+#naive females vs Wt-exposed females
+samples2 <- rownames(col_data)[col_data$treatment %in% c("naive_fem", 'wt_exp_fem')]
+psi2 <- all_PSI10_no_na[, samples2]
+psi2_scaled <- t(scale(t(psi2)))
+psi2_scaled <- psi2_scaled[apply(psi2_scaled, 1, function(x) all(is.finite(x))), ]
+sum(!apply(psi_scaled, 1, function(x) all(is.finite(x))))
+annot2 <- col_data[samples2, , drop = FALSE]
+annot2$treatment <- factor(annot2$treatment, levels = c("naive_fem","wt_exp_fem"))
+annot2$treatment <- droplevels(annot2$treatment)
+colors2 <- treatment_colors[levels(annot2$treatment)]
+
+pheatmap(
+  psi2_scaled,
+  color = heat_colors,
+  annotation_col = annot2["treatment"],
+  annotation_colors = list(treatment = colors2),
+  main = "Heatmap: Naive females vs Wt-exposed females",
+  show_rownames = FALSE,
+  filename = "splice_NaivesvsWtfem_heatmap.png"
+  )
+
+#exposed females
+samples3 <- rownames(col_data)[col_data$treatment %in% c("wt_exp_fem","nb1_exp_fem","nb2_exp_fem")]
+psi3 <- all_PSI10_no_na[, samples3]
+psi3_scaled <- t(scale(t(psi3)))
+psi3_scaled <- psi3_scaled[apply(psi3_scaled, 1, function(x) all(is.finite(x))), ]
+sum(!apply(psi_scaled, 1, function(x) all(is.finite(x))))
+annot3 <- col_data[samples3, , drop = FALSE]
+annot3$treatment <- factor(annot3$treatment, levels = c("wt_exp_fem","nb1_exp_fem","nb2_exp_fem"))
+annot3$treatment <- droplevels(annot3$treatment)
+colors3 <- treatment_colors[levels(annot3$treatment)]
+
+pheatmap(
+  psi3_scaled,
+  color = heat_colors,
+  annotation_col = annot3["treatment"],
+  annotation_colors = list(treatment = colors3),
+  main = "Heatmap: Exposed females",
+  show_rownames = FALSE,
+  filename = "splice_expfem_heatmap.png"
+  )
 
 
 #2. BUILD THE DIFFERENTIALLY SPLICED GENE TABLES 
