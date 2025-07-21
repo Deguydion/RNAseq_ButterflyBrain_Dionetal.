@@ -120,6 +120,42 @@ resLFC_brain_nb1vsnb2<-lfcShrink(brain_dds,coef = "treatment_nb2_exp_fem_vs_nb1_
 write.csv(as.data.frame(resLFC_brain_nb1vsnb2),file="resLFC_brain_nb1vsnb2_DEG.csv")
 
 
+#PERFORMING LRT ANALYSIS ON EXPOSED FEMALES (AS PER REVIEWER, JUNE 2025) 
+
+brain_countData <- as.matrix(read.csv("brain_gene_count_matrix.csv", row.names = "gene_id"))
+brain_colData <- read.csv("brain_pheno_data.csv", row.names = 1)
+
+#Subset to only samples with the three exposure treatments
+keep_samples <- brain_colData$treatment %in% c("wt_exp_fem", "nb1_exp_fem", "nb2_exp_fem")
+counts_sub <- brain_countData[, keep_samples]
+colData_sub <- brain_colData[keep_samples, , drop = FALSE]
+colData_sub$treatment <- factor(colData_sub$treatment, levels = c("wt_exp_fem", "nb1_exp_fem", "nb2_exp_fem")) #Ensure 'treatment' is a factor 
+
+#DESeq2 analysis
+dds_lrt <- DESeqDataSetFromMatrix(countData = counts_sub, colData = colData_sub, design = ~ treatment)
+dds_lrt <- DESeq(dds_lrt, test = "LRT", reduced = ~ 1)
+res_lrt <- results(dds_lrt)
+res_lrt_ordered <- res_lrt[order(res_lrt$padj), ] #Orders by adjusted p-value
+head(res_lrt_ordered)
+write.csv(as.data.frame(sig_res_lrt), file = "LRT_DEGs_wt_nb1_nb2.csv")
+
+#Do the pairwise with wald on the DEG from the LRT
+sig_genes <- rownames(sig_res_lrt)
+dds_wald <- DESeqDataSetFromMatrix(countData = counts_sub[sig_genes, ], colData = colData_sub, design = ~ treatment)
+dds_wald <- DESeq(dds_wald)
+res_nb1_vs_wt <- results(dds_wald, contrast = c("treatment", "nb1_exp_fem", "wt_exp_fem"))
+res_nb2_vs_wt <- results(dds_wald, contrast = c("treatment", "nb2_exp_fem", "wt_exp_fem"))
+res_nb2_vs_nb1 <- results(dds_wald, contrast = c("treatment", "nb2_exp_fem", "nb1_exp_fem"))
+
+sig_nb1_vs_wt <- res_nb1_vs_wt[which(res_nb1_vs_wt$padj < 0.05), ]
+sig_nb2_vs_wt <- res_nb2_vs_wt[which(res_nb2_vs_wt$padj < 0.05), ]
+sig_nb2_vs_nb1 <- res_nb2_vs_nb1[which(res_nb2_vs_nb1$padj < 0.05), ]
+
+write.csv(as.data.frame(sig_nb1_vs_wt), file = "DEGs_nb1_vs_wt.csv")
+write.csv(as.data.frame(sig_nb2_vs_wt), file = "DEGs_nb2_vs_wt.csv")
+write.csv(as.data.frame(sig_nb2_vs_nb1), file = "DEGs_nb2_vs_nb1.csv")
+
+
 #BUILDING DEG PLOTS
 
 #MA plots
@@ -160,3 +196,83 @@ EnhancedVolcano(res_brain_NvsM,
                 subtitle = NULL,
                 title=NULL)
 
+
+#BUILD THE HEATMAPS FROM THE COUNT MATRIX: UNBIASED MALE VS FEMALE; UNBIASED NAIVE VERSUS WT-EXP FEMALE AMD EXPOSED FEMALES
+#AS PER REVIEWER, JULY 2025
+
+library(pheatmap)
+library(RColorBrewer)
+
+# Define custom colors for annotation
+treatment_colors <- c(male = "lightgrey", naive_fem = "black", wt_exp_fem = "#EE7733", nb1_exp_fem = "#009988", nb2_exp_fem = "#0177BB")
+heat_colors <- colorRampPalette(c("purple", "purple", "black", "yellow", "yellow"))(100)
+
+#Naive individuals
+subset1 <- brain_colData[brain_colData$treatment %in% c("male", "naive_fem"), ]
+dds1 <- DESeqDataSetFromMatrix(countData = brain_countData[, rownames(subset1)],colData = subset1, design = ~ treatment)
+brain_keep<-rowSums(counts(dds1)) >= 10
+dds1<-dds1[brain_keep,]
+
+rld1 <- rlog(dds1, blind = TRUE)
+mat1 <- assay(rld1)
+mat1_scaled <- t(scale(t(mat1)))
+annotation1 <- data.frame(Treatment = subset1$treatment)
+rownames(annotation1) <- rownames(subset1)
+treatment_colors_subset1 <- treatment_colors[levels(droplevels(subset1$treatment))]
+
+pheatmap(
+  mat1_scaled[sample(rownames(mat1_scaled), 500), ],
+  color = heat_colors,
+  annotation_col = annotation1,
+  annotation_colors = list(Treatment = treatment_colors_subset1),
+  show_rownames = FALSE,
+  main = "Unbiased Heatmap: Male vs Naive",
+  filename = "unbiased_male_vs_naive_heatmap.png"
+)
+
+#Exposed females
+subset2 <- brain_colData[brain_colData$treatment %in% c("wt_exp_fem","nb1_exp_fem","nb2_exp_fem"), ]
+dds2 <- DESeqDataSetFromMatrix(countData = brain_countData[, rownames(subset2)], colData = subset2, design = ~ treatment)
+brain_keep<-rowSums(counts(dds2)) >= 10
+dds2<-dds2[brain_keep,]
+
+rld2 <- rlog(dds2, blind = TRUE)
+mat2 <- assay(rld2)
+mat2_scaled <- t(scale(t(mat2)))
+annotation2 <- data.frame(Treatment = subset2$treatment)
+rownames(annotation2) <- rownames(subset2)
+treatment_colors_subset2 <- treatment_colors[levels(droplevels(subset2$treatment))]
+
+pheatmap(
+  mat2_scaled[sample(rownames(mat2_scaled), 500), ],
+  color = heat_colors,
+  annotation_col = annotation2,
+  annotation_colors = list(Treatment = treatment_colors_subset2),
+  show_rownames = FALSE,
+  main = "Unbiased Heatmap: Exposed females",
+  filename = "unbiased_expfemales_heatmap.png"
+  )
+
+#Naives versus Wt females
+subset3 <- brain_colData[brain_colData$treatment %in% c("naive_fem", "wt_exp_fem"), ]
+dds3 <- DESeqDataSetFromMatrix(countData = brain_countData[, rownames(subset3)], colData = subset3, design = ~ treatment)
+
+brain_keep<-rowSums(counts(dds3)) >= 10
+dds3<-dds3[brain_keep,]
+
+rld3 <- rlog(dds3, blind = TRUE)
+mat3 <- assay(rld3)
+mat3_scaled <- t(scale(t(mat3)))
+annotation3 <- data.frame(Treatment = subset3$treatment)
+rownames(annotation3) <- rownames(subset3)
+treatment_colors_subset3 <- treatment_colors[levels(droplevels(subset3$treatment))]
+
+pheatmap(
+  mat3_scaled[sample(rownames(mat3_scaled), 500), ],
+  color = heat_colors,
+  annotation_col = annotation3,
+  annotation_colors = list(Treatment = treatment_colors_subset3),
+  show_rownames = FALSE,
+  main = "Unbiased Heatmap: Naives and wt-exposed females",
+  filename = "unbiased_naive&wt-expfem_heatmap.png"
+)
