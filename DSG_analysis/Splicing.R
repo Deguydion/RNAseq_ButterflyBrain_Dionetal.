@@ -437,3 +437,63 @@ SG_all$absIncleveldifference=abs(SG_all$IncLevelDifference)
 SG_unique_gene=SG_all[order(SG_all[,'GeneID'],-SG_all[,'absIncleveldifference']),]
 SG_unique_gene=SG_unique_gene[!duplicated(SG_unique_gene$GeneID),]
 write.csv(SG_unique_gene,file="SG_malevsfemale_unique.csv") #This is used for the DEG vs DSG scatter plot.
+
+           
+#3. TREND IDENTIFICATION FOR COMMON SG IN EXPOSED FEMALES
+#BUILD TABLE WITH SG HAVING AT LEAST 2 SIGNIFICANT FDR IN A COMPARISON, SAME SPLICE EVENT AND PSI IN ACCORDANCE TO MSP2 CHANGES 
+#FROM REVIEWER JULY2025
+
+library(dplyr)
+library(readr)
+library(purrr)
+
+# Select all unique SG and merge them into a single table 
+df1 <- read_csv("SG_malevsfemale_unique.csv") %>%
+  select(GeneID, FDR, PSI = IncLevelDifference, Type) %>%
+  rename(FDR_male_female = FDR, PSI_male_female = PSI, Type_male_female=Type)
+df2 <- read_csv("SG_NB1vsNB2_unique.csv") %>%
+  select(GeneID, FDR, PSI = IncLevelDifference, Type) %>%
+  rename(FDR_NB1_NB2 = FDR, PSI_NB1_NB2 = PSI, Type_NB1_NB2=Type)
+df3 <- read_csv("SG_NvsWt_unique.csv") %>%
+  select(GeneID, FDR, PSI = IncLevelDifference, Type) %>%
+  rename(FDR_N_WT = FDR, PSI_N_WT = PSI, Type_N_WT=Type)
+df4 <- read_csv("SG_WtvsNB1_unique.csv") %>%
+  select(GeneID, FDR, PSI = IncLevelDifference, Type) %>%
+  rename(FDR_WT_NB1 = FDR, PSI_WT_NB1 = PSI, Type_WT_NB1=Type)
+df5 <- read_csv("SG_WtvsNB2_unique.csv") %>%
+  select(GeneID, FDR, PSI = IncLevelDifference, Type) %>%
+  rename(FDR_WT_NB2 = FDR, PSI_WT_NB2 = PSI, Type_WT_NB2=Type)
+
+merged_df <- reduce(list(df1, df2, df3, df4, df5), function(x, y) full_join(x, y, by = "GeneID"))
+merged_df_clean <- na.omit(merged_df)
+head(merged_df_clean)
+write_csv(merged_df_clean, "merged_PSI_FDR_table.csv")
+
+##Select those genes with at least two significant FDR (<0.05)
+data <- read.csv("merged_PSI_FDR_Exp.csv", header = TRUE)
+fdr_cols <- c("FDR_WT_NB2", "FDR_WT_NB1", "FDR_NB1_NB2")
+fdr_below_0.05 <- apply(data[fdr_cols], 1, function(x) sum(x < 0.05, na.rm = TRUE))
+filtered_data <- data[fdr_below_0.05 >= 2, ]
+filtered_data <- filtered_data[ , !(names(filtered_data) %in% c("FDR_male_female", "PSI_male_female", "Type_male_female", "FDR_N_WT", "PSI_N_WT", "Type_N_WT"))]
+print(filtered_data)
+write.csv(filtered_data, "signifiant_FDR_genes.csv", row.names = FALSE)
+
+#Select the genes with PSI corresponding to MSP2 changes
+filtered_data <- read.csv("signifiant_FDR_genes.csv", header = TRUE)
+psi_cols <- c("PSI_NB1_NB2", "PSI_WT_NB2", "PSI_WT_NB1")
+filtered_data[psi_cols] <- lapply(filtered_data[psi_cols], as.numeric)
+pattern1 <- with(filtered_data, PSI_NB1_NB2 > 0 & PSI_WT_NB2 > 0 & PSI_WT_NB1 < 0)
+pattern2 <- with(filtered_data, PSI_NB1_NB2 < 0 & PSI_WT_NB2 < 0 & PSI_WT_NB1 > 0)
+msp2_selection <- filtered_data[pattern1 | pattern2, ]
+print(msp2_selection)
+write.csv(msp2_selection, "filtered_genes_PSI_msp2_patterns.csv", row.names = FALSE)
+
+#Select genes with the same splice types in the 3 exposure treatments
+type_cols <- c("Type_NB1_NB2", "Type_WT_NB1", "Type_WT_NB2")
+msp2_selection[type_cols] <- lapply(msp2_selection[type_cols], as.character)
+same_type <- with(msp2_selection, Type_NB1_NB2 == Type_WT_NB1 & Type_WT_NB1 == Type_WT_NB2)
+final_same_type <- msp2_selection[same_type, ]
+print(final_same_type)
+write.csv(final_same_type, "final_same_type_msp2_genes.csv", row.names = FALSE)
+
+
