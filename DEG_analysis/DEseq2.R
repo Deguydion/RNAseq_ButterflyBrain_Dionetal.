@@ -5,6 +5,8 @@ library(pheatmap)
 library(EnhancedVolcano)
 library(RColorBrewer)
 library(vsn)
+library(SmartSVA)
+library(ggrepel)
 
 #DATA INPUT AND FILTERING
 #Data import
@@ -37,11 +39,24 @@ colSums(counts(brain_dds,normalized=T))# Total number of normalized counts per s
 brain_rld<-rlog(brain_dds,blind=TRUE)
 head(assay(brain_rld),3)
 
-#Principal component analysis PCA 
+#Generate variance-stabilize counts and generate mnatrixes for smartSVA
+vsd<-vst(brain_dds,blind=TRUE)
+exprs<-assay(vsd)   
+class(exprs)
+mod<-model.matrix(~treatment,colData(vsd)) #full model
+mod0<-model.matrix(~1,colData(vsd)) #null model
+
+#Estimate surrogate variables. We find none, and proceed to DEG analysis without extra variable
+smart_sv<-smartsva.cpp(dat=exprs,mod=mod,mod0=mod0,n.sv=NULL)
+n_sv<-ncol(smart_sv$sv)
+cat("Number of surrogate variables detected:",n_sv,"\n")
+head(smart_sv$sv)
+
+#Unbiased principal component analysis PCA on 500 random genes
 plotPCA(brain_rld, intgroup="treatment")
 plotPCA(brain_rld, intgroup="treatment") + geom_text(aes(label=name))
 
-#Heatmap of the count matrix
+#Unbiased heatmap of the count matrix
 pcaData<-plotPCA(brain_rld,intgroup="treatment",ntop=500,returnData=TRUE)
 percentVar<-round(100 * attr(pcaData, "percentVar"))
 ggplot(pcaData,aes(PC1, PC2, color=treatment)) +
@@ -120,7 +135,7 @@ resLFC_brain_nb1vsnb2<-lfcShrink(brain_dds,coef = "treatment_nb2_exp_fem_vs_nb1_
 write.csv(as.data.frame(resLFC_brain_nb1vsnb2),file="resLFC_brain_nb1vsnb2_DEG.csv")
 
 
-#PERFORMING LRT ANALYSIS ON EXPOSED FEMALES (AS PER REVIEWER, JUNE 2025) 
+#PERFORMING LRT ANALYSIS ON EXPOSED FEMALES (AS PER REVIEWER SUGGESTION, JUNE 2025) 
 
 brain_countData <- as.matrix(read.csv("brain_gene_count_matrix.csv", row.names = "gene_id"))
 brain_colData <- read.csv("brain_pheno_data.csv", row.names = 1)
@@ -198,7 +213,7 @@ EnhancedVolcano(res_brain_NvsM,
 
 
 #BUILD THE HEATMAPS FROM THE COUNT MATRIX: UNBIASED MALE VS FEMALE; UNBIASED NAIVE VERSUS WT-EXP FEMALE AMD EXPOSED FEMALES
-#AS PER REVIEWER, JULY 2025
+#AS PER REVIEWER'S SUGGESTION, JULY 2025
 
 library(pheatmap)
 library(RColorBrewer)
@@ -276,3 +291,100 @@ pheatmap(
   main = "Unbiased Heatmap: Naives and wt-exposed females",
   filename = "unbiased_naive&wt-expfem_heatmap.png"
 )
+
+#BUILDING THE PCA AND HEATMAPS FROM the DEGS. WE CHOSE TO USE DEGS AT P<0.1 BECAUSE WE FIND VERY FEW AT P<0.05
+#AS PER REVIEWER'S REQUIREMENT NOV2025
+
+# Define custom colors for annotation
+treatment_colors<-c(
+  male="lightgrey",
+  naive_fem="black",
+  wt_exp_fem="#EE7733",
+  nb1_exp_fem="#009988",
+  nb2_exp_fem="#0177BB"
+)
+
+# Define heatmap color palette
+heat_colors<-colorRampPalette(c("purple","purple","black","yellow","yellow"))(100)
+
+#Run DESeq2, subset to DEG at p<0.1 and keep first 500
+dds<-DESeq(brain_dds)
+res<-results(dds,alpha=0.1)
+deg<-subset(res,padj<0.1 & !is.na(padj))
+deg<-deg[order(deg$padj), ]
+top500_genes<-rownames(head(deg,500))
+
+#Transform data for stabilizing variance
+vsd<-vst(dds,blind=FALSE)
+vsd_top500<-assay(vsd)[top500_genes, ]
+vsd_top500_scaled<-t(scale(t(vsd_top500))) #scale genes to zscore for better visual contrast for heatmap
+
+#Preparing PCA on DEGs
+pca<-prcomp(t(vsd_top500_scaled),scale.=TRUE)
+nrow(vsd_top500)  #provides total number of 0.1DEGs genes used in PCA
+
+pcaData<-as.data.frame(pca$x[, 1:2])  #keeps only PC1 and PC2
+pcaData$name<-colnames(vsd_top500_scaled) 
+pcaData$treatment<-colData(vsd)$treatment  
+percentVar<-round(100 *(pca$sdev^2/sum(pca$sdev^2))[1:2], 1) #Calculates variance explained by PCs
+
+#Building PCA plots 
+xlim_val<-max(abs(pcaData$PC1)) * 1.1
+ylim_val<-max(abs(pcaData$PC2)) * 1.1
+
+ggplot(pcaData,aes(x=PC1,y=PC2,color=treatment)) +
+  geom_point(size=4) +
+  scale_color_manual(values=treatment_colors) +
+  scale_x_continuous(limits=c(-xlim_val, xlim_val),expand=c(0, 0)) +
+  scale_y_continuous(limits=c(-ylim_val, ylim_val),expand=c(0, 0)) +
+  labs(
+    title="All data: Top 139 DEGs at adj.p<0.1",   
+    x=paste0("PC1:",percentVar[1],"% variance"),
+    y=paste0("PC2:",percentVar[2],"% variance")
+  ) +
+  coord_fixed() +
+  theme_bw(base_size=14) +
+  theme(
+    axis.text.x=element_text(face="bold"),  
+    axis.text.y=element_text(face="bold"),
+    panel.background=element_rect(fill ="grey97",color=NA),  #design for same colors as the unbiased PCA
+    panel.grid.major=element_line(color="white"),              
+    panel.grid.minor=element_line(color="white"),              
+    panel.border=element_blank(),                                 
+    axis.line=element_line(color="white"),                      
+    legend.title=element_blank(),
+    plot.title=element_text(hjust=0.5,size=16,face="bold")
+  )
+
+#Subsetting data by treatment comparisons for heatmaps
+#Males versus naive females. Same procedure is used for the other comparisons. 
+subset1<-brain_colData[brain_colData$treatment %in% c("male","naive_fem"), ]
+count_subset1<-brain_countData[,rownames(subset1)]
+dds1<-DESeqDataSetFromMatrix(countData=count_subset1,colData=subset1,design=~treatment)
+dds1 <- dds1[rowSums(counts(dds1)) >= 10, ]
+dds1 <- DESeq(dds1)
+
+res1<-results(dds1 alpha=0.1) 
+deg1<-subset(res1,padj<0.1 & !is.na(padj))
+nrow(deg1) #how much genes passed the padj
+deg1<-deg1[order(deg1$padj), ] #Select top 500 DEGs
+topN<-min(500,nrow(deg1))
+top500_genes1<-rownames(head(deg1,topN))
+rld1<-rlog(dds1,blind=TRUE) #Normalize data
+mat1<-assay(rld1)[top500_genes1, ]
+mat1_scaled<-t(scale(t(mat1)))
+
+annotation1<-data.frame(Treatment=subset1$treatment) #Create annotation
+rownames(annotation1)<-rownames(subset1)
+treatment_colors_subset1<-treatment_colors[levels(droplevels(subset1$treatment))] #Restrict treatment_colors to only this subset
+
+#Plot heatmap
+pheatmap(
+  mat1_scaled,
+  color = heat_colors,
+  annotation_col = annotation1,
+  annotation_colors = list(Treatment = treatment_colors_subset1),
+  show_rownames = FALSE,
+  main = "Top 31 DEGs at adj. p <0.1: Males vs Naive Females"
+)
+
