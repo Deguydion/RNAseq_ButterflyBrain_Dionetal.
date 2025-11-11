@@ -37,3 +37,11 @@ Use SplicingProp_plot.R.
 Uses packaes ggplot2 to build the plot, and wesanderson to use the movies' color palettes.
 \
 This plots the percentage of each splicing type for each treatment comparison as a stacked bar chart to 100%. 
+
+### Corrleations of DeltaPSI plot
+Use DelatPSIcorrelation_plot.R
+\
+Uses ggplot2 and ggpubr to build the plots (ggpubr: https://cran.r-project.org/web/packages/ggpubr/index.html).
+\
+Each plot contains the data points, the linear regression fitted by ordinary least squares, R and p value.
+
